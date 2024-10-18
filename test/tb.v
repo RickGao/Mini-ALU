@@ -10,7 +10,7 @@ module tb ();
   initial begin
     $dumpfile("tb.vcd");
     $dumpvars(0, tb);
-    #1;
+    #10;
   end
 
   // Wire up the inputs and outputs:
@@ -22,19 +22,19 @@ module tb ();
   wire [7:0] uo_out;
   wire [7:0] uio_out;
   wire [7:0] uio_oe;
-`ifdef GL_TEST
-  wire VPWR = 1'b1;
-  wire VGND = 1'b0;
-`endif
 
+
+   supply1 VPWR;
+   supply0 VGND;
+   
   // Replace tt_um_example with your module name:
-  tt_um_example user_project (
+  tt_um_Richard28277 user_project (
 
       // Include power ports for the Gate Level test:
-`ifdef GL_TEST
-      .VPWR(VPWR),
-      .VGND(VGND),
-`endif
+   `ifdef GL_TEST
+     .VPWR(VPWR),
+     .VGND(VGND),
+   `endif
 
       .ui_in  (ui_in),    // Dedicated inputs
       .uo_out (uo_out),   // Dedicated outputs
