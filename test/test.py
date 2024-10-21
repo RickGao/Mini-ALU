@@ -44,10 +44,10 @@ async def test_tt_um_alu(dut):
 
     # Test ADD operation 0010 with overflow
     dut.ui_in.value  = 0b00111111  # a = 63, control upper = 00
-    dut.uio_in.value = 0b10000001  # b = 1,  control lower = 10
+    dut.uio_in.value = 0b10000010  # b = 1,  control lower = 10
     await Timer(delay_ns, units='ns')
     display_result("ADD", dut)
-    assert dut.uo_out.value == 0b01000000, f"ADD failed, expected 0b00001000, got {dut.uo_out.value}"
+    assert dut.uo_out.value == 0b01000001, f"ADD failed, expected 0b00001000, got {dut.uo_out.value}"
 
     # Test ADD operation 0010
     dut.ui_in.value = 0b00000011  # a = 3, control upper = 00
