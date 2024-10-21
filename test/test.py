@@ -51,7 +51,7 @@ async def test_tt_um_alu(dut):
 
     # Test SUB operation 0110
     dut.ui_in.value  = 0b01000010  # a = 2, control upper = 01
-    dut.uio_in.value = 0b10010001  # b = 1, control lower = 10
+    dut.uio_in.value = 0b10000001  # b = 1, control lower = 10
     await Timer(delay_ns, units='ns')
     display_result("SUB", dut)
     assert dut.uo_out.value == 0b00000001, f"SUB failed, expected 0b00000001, got {dut.uo_out.value}"
