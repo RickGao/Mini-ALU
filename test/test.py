@@ -13,7 +13,7 @@ def display_result(operation, dut):
     print(f"a = {a}, b = {b}, control = {control}, result = {result}, carry = {carry}, zero = {zero}\n")
 
 @cocotb.test()
-async def test_alu(dut):
+async def test_tt_um_alu(dut):
     """Test ALU operations: AND, OR, ADD, SUB, XOR"""
     # AND = 4'b0000,
     # OR  = 4'b0001,
