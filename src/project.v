@@ -33,9 +33,9 @@ module tt_um_alu (
 
 
     wire [3:0]       control,    // Control Signal
-    wire [WIDTH-1:0] a,          // Operand A
-    wire [WIDTH-1:0] b,          // Operand B
-    wire [WIDTH-1:0] out,        // Output
+    wire [`WIDTH-1:0] a,          // Operand A
+    wire [`WIDTH-1:0] b,          // Operand B
+    wire [`WIDTH-1:0] out,        // Output
     wire             carry       // Carry Out
     wire             zero        // Zero Flag
 
