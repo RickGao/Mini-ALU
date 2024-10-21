@@ -32,12 +32,12 @@ module tt_um_alu (
     wire _unused = &{ena, clk, rst_n, 1'b0};
 
 
-    wire [3:0]       control,    // Control Signal
-    wire [`WIDTH-1:0] a,          // Operand A
-    wire [`WIDTH-1:0] b,          // Operand B
-    wire [`WIDTH-1:0] out,        // Output
-    wire             carry       // Carry Out
-    wire             zero        // Zero Flag
+    wire [3:0]        control;    // Control Signal
+    wire [`WIDTH-1:0] a;          // Operand A
+    wire [`WIDTH-1:0] b;          // Operand B
+    wire [`WIDTH-1:0] out;        // Output
+    wire              carry;       // Carry Out
+    wire              zero;        // Zero Flag
 
 
     assign a[5:0] = ui_in[5:0];        // Lower 6 bits of IN is Operand A
