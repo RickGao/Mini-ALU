@@ -61,8 +61,8 @@ module tt_um_alu (
     wire sum[`WIDTH:0];
     wire dif[`WIDTH:0];
 
-    assign sum = a + b;
-    assign dif = a - b;
+    assign sum = {1'b0, a} + {1'b0, b};
+    assign dif = {1'b0, a} - {1'b0, b};
     
     // Assign outputs based on the control signal
     assign out =    (control == AND) ? (a & b) :
