@@ -58,8 +58,8 @@ module tt_um_alu (
         SRA  = 4'b0111,  // Shift Right Arithmatic
         SLT  = 4'b1000;  // Set Less Than Signed
 
-    wire sum[`WIDTH:0];
-    wire dif[`WIDTH:0];
+    wire [`WIDTH:0] sum;
+    wire [`WIDTH:0] dif;
 
     assign sum = {1'b0, a} + {1'b0, b};
     assign dif = {1'b0, a} - {1'b0, b};
