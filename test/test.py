@@ -1,86 +1,67 @@
 import cocotb
-from cocotb.triggers import RisingEdge, Timer
-from cocotb.clock import Clock
+from cocotb.triggers import Timer
+
+# Helper function to display results for debugging
+def display_result(operation, dut):
+    a = dut.ui_in.value & 0x3F  # Extract lower 6 bits for a
+    b = dut.uio_in.value & 0x3F  # Extract lower 6 bits for b
+    control = ((dut.ui_in.value >> 6) & 0x3) << 2 | ((dut.uio_in.value >> 6) & 0x3)  # Combine upper 2 bits of ui_in and uio_in to form control
+    result = dut.uo_out.value & 0x3F  # Extract lower 6 bits for the result
+    carry = (dut.uo_out.value >> 6) & 0x1  # Carry bit is the 7th bit
+    zero = (dut.uo_out.value >> 7) & 0x1  # Zero flag is the 8th bit
+    print(f"Operation: {operation}")
+    print(f"a = {a}, b = {b}, control = {control}, result = {result}, carry = {carry}, zero = {zero}\n")
 
 @cocotb.test()
-async def test_tt_um_Richard28277(dut):
-    # Clock generation
-    cocotb.start_soon(Clock(dut.clk, 10, units='ns').start())
+async def test_alu(dut):
+    """Test ALU operations: AND, OR, ADD, SUB, XOR"""
+    # AND = 4'b0000,
+    # OR  = 4'b0001,
+    # ADD = 4'b0010,
+    # SUB = 4'b0110,
+    # XOR = 4'b0100,
+    # SLL = 4'b0011,  // Shift Left Logical
+    # SRL = 4'b0110,  // Shift Right Logical
+    # SRA = 4'b0111,  // Shift Right Arithmatic
+    # SLT = 4'b1000;  // Set Less Than Signed
 
-    # Initialize Inputs
-    dut.ui_in.value = 0
-    dut.uio_in.value = 0
-    dut.ena.value = 1
-    dut.rst_n.value = 0
+    # Set a small delay
+    delay_ns = 50
 
-    # Wait for global reset
-    await Timer(50, units='ns')
-    dut.rst_n.value = 1
+    # Test AND operation 0000
+    dut.ui_in.value  = 0b00000010  # a = 2, control upper = 00
+    dut.uio_in.value = 0b00000010  # b = 2, control lower = 00
+    await Timer(delay_ns, units='ns')
+    display_result("AND", dut)
+    assert dut.uo_out.value == 0b00000010, f"AND failed, expected 0b00000010, got {dut.uo_out.value}"
 
-    # Helper function to display results
-    def display_result(op_name):
-        print(f"{op_name}: result = {dut.uo_out.value}, uio_out = {dut.uio_out.value}")
+    # Test OR operation 0001
+    dut.ui_in.value  = 0b00001100  # a = 12, control upper = 00
+    dut.uio_in.value = 0b01000010  # b = 2,  control lower = 01
+    await Timer(delay_ns, units='ns')
+    display_result("OR", dut)
+    assert dut.uo_out.value == 0b00001110, f"OR failed, expected 0b00001110, got {dut.uo_out.value}"
 
-    # Test ADD operation
-    dut.ui_in.value = 0b0011_0101  # a = 3, b = 5
-    dut.uio_in.value = 0b0000      # opcode = ADD
-    await Timer(50, units='ns')
-    display_result("ADD")
-    assert dut.uo_out.value == 0b0000_1000  # Expect 8 (0b00001000)
+    # Test ADD operation 0010
+    dut.ui_in.value  = 0b00000011  # a = 3, control upper = 00
+    dut.uio_in.value = 0b10000101  # b = 5, control lower = 10
+    await Timer(delay_ns, units='ns')
+    display_result("ADD", dut)
+    assert dut.uo_out.value == 0b00001000, f"ADD failed, expected 0b00001000, got {dut.uo_out.value}"
 
-    # Test SUB operation
-    dut.ui_in.value = 0b0010_0001  # a = 2, b = 1
-    dut.uio_in.value = 0b0001      # opcode = SUB
-    await Timer(50, units='ns')
-    display_result("SUB")
-    assert dut.uo_out.value == 0b0000_0001  # Expect 1 (0b00000001)
+    # Test SUB operation 0110
+    dut.ui_in.value  = 0b01000010  # a = 2, control upper = 01
+    dut.uio_in.value = 0b10010001  # b = 1, control lower = 10
+    await Timer(delay_ns, units='ns')
+    display_result("SUB", dut)
+    assert dut.uo_out.value == 0b00000001, f"SUB failed, expected 0b00000001, got {dut.uo_out.value}"
 
-    # Test MUL operation
-    dut.ui_in.value = 0b0010_0011  # a = 2, b = 3
-    dut.uio_in.value = 0b0010      # opcode = MUL
-    await Timer(50, units='ns')
-    display_result("MUL")
-    assert dut.uo_out.value == 0b0000_0110  # Expect 6 (0b00000110)
+    # Test XOR operation 0100
+    dut.ui_in.value  = 0b01001100  # a = 12, control upper = 01
+    dut.uio_in.value = 0b00000010  # b = 2,  control lower = 00
+    await Timer(delay_ns, units='ns')
+    display_result("XOR", dut)
+    assert dut.uo_out.value == 0b00001110, f"XOR failed, expected 0b00000110, got {dut.uo_out.value}"
 
-    # Test DIV operation
-    dut.ui_in.value = 0b0100_0010  # a = 4, b = 2
-    dut.uio_in.value = 0b0011      # opcode = DIV
-    await Timer(50, units='ns')
-    display_result("DIV")
-    # Expect 4 and 2 (0b0000_0010 0b0000_0100)
-    assert dut.uo_out.value == 0b00000010
-
-    # Test AND operation
-    dut.ui_in.value = 0b0010_0010  # a = 2, b = 2
-    dut.uio_in.value = 0b0100      # opcode = AND
-    await Timer(50, units='ns')
-    display_result("AND")
-    assert dut.uo_out.value == 0b0000_0010  # Expect 2 (0b00000010)
-
-    # Test OR operation
-    dut.ui_in.value = 0b1100_1010  # a = 12, b = 10
-    dut.uio_in.value = 0b0101      # opcode = OR
-    await Timer(50, units='ns')
-    display_result("OR")
-    assert dut.uo_out.value == 0b00001110  # Expect 14 (0b00001110)
-
-    # Test XOR operation
-    dut.ui_in.value = 0b1100_1010  # a = 12, b = 10
-    dut.uio_in.value = 0b0110      # opcode = XOR
-    await Timer(50, units='ns')
-    display_result("XOR")
-    assert dut.uo_out.value == 0b0000_0110  # Expect 6 (0b00000110)
-
-    # Test NOT operation
-    dut.ui_in.value = 0b1100_1010  # a = 12, b = ignored
-    dut.uio_in.value = 0b0111      # opcode = NOT
-    await Timer(50, units='ns')
-    display_result("NOT")
-    assert dut.uo_out.value == 0b00000011  # Expect 101 (0b00100101)
-
-    # Test ENC operation
-    dut.ui_in.value = 0b0010_1100  # a = 2, b = 12
-    dut.uio_in.value = 0b1000      # opcode = ENC
-    await Timer(50, units='ns')
-    display_result("ENC")
-    assert dut.uo_out.value == (0b0010_1100 ^ 0xAB)  # Expect encryption result with key 0xAB
+    # Check the result for any failure
+    print("All tests passed!")
