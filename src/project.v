@@ -61,32 +61,28 @@ module tt_um_alu (
     wire sum[`WIDTH:0];
     wire dif[`WIDTH:0];
 
-    // Main Computation
-    always @(*) begin
-        case (control)
-            AND:  out = a & b;
-            OR:   out = a | b;
-            ADD:  begin
-                sum = a + b;
-                out = sum[`WIDTH-1:0];   // Assign lower WIDTH bits to out
-                carry = sum[`WIDTH];     // Assign carry out
-            end
-            SUB:  begin
-                dif = a - b;
-                out = dif[`WIDTH-1:0];   // Assign lower WIDTH bits to out
-                carry = dif[`WIDTH];     // Assign carry out (if used)
-            end
-            XOR:  out = a ^ b;
-            SLL:  out = a << b[$clog2(WIDTH)-1:0];
-            SRL:  out = a >> b[$clog2(WIDTH)-1:0];
-            SRA:  out = a >>> b[$clog2(WIDTH)-1:0];
-            SLT:  out = ($signed(a) < $signed(b)) ? {{(WIDTH-1){1'b0}}, 1'b1} : {WIDTH{1'b0}};
-            default: out = {WIDTH{1'b0}};
-        endcase
-    end
+    assign sum = a + b;
+    assign dif = a - b;
+    
+    // Assign outputs based on the control signal
+    assign out =    (control == AND) ? (a & b) :
+                    (control == OR)  ? (a | b) :
+                    (control == ADD) ? sum[`WIDTH-1:0] :
+                    (control == SUB) ? dif[`WIDTH-1:0] :
+                    (control == XOR) ? (a ^ b) :
+                    (control == SLL) ? (a << b[$clog2(`WIDTH)-1:0]) :
+                    (control == SRL) ? (a >> b[$clog2(`WIDTH)-1:0]) :
+                    (control == SRA) ? (a >>> b[$clog2(`WIDTH)-1:0]) :
+                    (control == SLT) ? (($signed(a) < $signed(b)) ? {{(`WIDTH-1){1'b0}}, 1'b1} : {`WIDTH{1'b0}}) :
+                    {`WIDTH{1'b0}};  // Default output is 0
+
+    // Assign carry out for ADD and SUB operations
+    assign carry =  (control == ADD) ? sum[`WIDTH] :
+                    (control == SUB) ? dif[`WIDTH] :
+                    1'b0;  // No carry for other operations
 
     // Zero Flag
-    assign zero = (out == {WIDTH{1'b0}});
+    assign zero = (out == {`WIDTH{1'b0}});
 
     assign uo_out[5:0] = out[5:0];
     assign uo_out[6]   = carry;
