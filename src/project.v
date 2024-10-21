@@ -84,6 +84,7 @@ module tt_um_alu (
     // Zero Flag
     assign zero = (out == {`WIDTH{1'b0}});
 
+
     assign uo_out[5:0] = out[5:0];
     assign uo_out[6]   = carry;
     assign uo_out[7]   = zero;
