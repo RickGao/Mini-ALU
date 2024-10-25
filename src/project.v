@@ -64,15 +64,12 @@ module tt_um_alu (
     assign sum = {1'b0, a} + {1'b0, b};
     assign dif = {1'b0, a} - {1'b0, b};
 
-    // 计算移位位数
-    wire [$clog2(`WIDTH)-1:0] shift;
-    assign shift = b[$clog2(`WIDTH)-1:0];
 
-    // 执行逻辑右移
-    wire [`WIDTH-1:0] shifted;
-    assign shifted = a >> shift;
+    // Shift right arithmatic
+    wire [`WIDTH-1:0] right_shifted;
+    assign right_shifted = a >> b[$clog2(`WIDTH)-1:0];
 
-    // 计算符号扩展的高位部分
+    // Calculate high bits
     wire [`WIDTH-1:0] sign_extend;
     assign sign_extend = a[`WIDTH-1] ? (~( {`WIDTH{1'b1}} >> shift )) : {`WIDTH{1'b0}};
     
@@ -82,10 +79,10 @@ module tt_um_alu (
                     (control == ADD) ? sum[`WIDTH-1:0] :
                     (control == SUB) ? dif[`WIDTH-1:0] :
                     (control == XOR) ? (a ^ b) :
-                    (control == SLL) ? (a << b[$clog2(`WIDTH)-1:0]) :
-                    (control == SRL) ? (a >> b[$clog2(`WIDTH)-1:0]) :
-                    // (control == SRA) ? ($signed(a) >>> b[$clog2(`WIDTH)-1:0]):
-                    (control == SRA) ? (shifted | sign_extend) :
+                     (control == SLL) ? (a << shift) :
+                    (control == SRL) ? right_shifted :
+                    (control == SRA) ? (right_shifted | sign_extend) :
+                    // (control == SRA) ? ($signed(a) >>> b[$clog2(`WIDTH)-1:0]): // Not working
                     (control == SLT) ? (($signed(a) < $signed(b)) ? {{(`WIDTH-1){1'b0}}, 1'b1} : {`WIDTH{1'b0}}) :
                     {`WIDTH{1'b0}};  // Default output is 0
 

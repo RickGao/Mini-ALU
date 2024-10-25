@@ -273,9 +273,8 @@ async def test_tt_um_alu(dut):
         (0x20, 0x03),  # Shift right arithmetic by 3
         (0x3F, 0x01),  # Negative number
         (0x10, 0x02),
-        (0x3F, 0x04),  # Shift right by4
+        (0x3F, 0x04),  # Shift right by 4
         (0x3F, 0x02),  # Shift right by 2
-        # 3
     ]
     for _ in range(100):
         a_rand = random.randint(0, 0x3F)
