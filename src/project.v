@@ -72,11 +72,26 @@ module tt_um_alu (
                     (control == XOR) ? (a ^ b) :
                     (control == SLL) ? (a << b[$clog2(`WIDTH)-1:0]) :
                     (control == SRL) ? (a >> b[$clog2(`WIDTH)-1:0]) :
-                    (control == SRA) ? ( $signed({{(32-`WIDTH){a[`WIDTH-1]}}, a}) >>> b[$clog2(`WIDTH)-1:0]) [ `WIDTH -1 : 0 ] :
                     // (control == SRA) ? ($signed(a) >>> b[$clog2(`WIDTH)-1:0]):
-                    // (control == SRA) ? (a >>> b[$clog2(`WIDTH)-1:0]) :
+                    (control == SRA) ? arithmetic_shift_right(a, b[$clog2(`WIDTH)-1:0]) :
                     (control == SLT) ? (($signed(a) < $signed(b)) ? {{(`WIDTH-1){1'b0}}, 1'b1} : {`WIDTH{1'b0}}) :
                     {`WIDTH{1'b0}};  // Default output is 0
+
+
+    // 自定义函数，实现算术右移
+    function [`WIDTH-1:0] arithmetic_shift_right;
+        input [`WIDTH-1:0] value;
+        input [$clog2(`WIDTH)-1:0] shift;
+        reg [`WIDTH-1:0] shifted;
+    begin
+        shifted = value >> shift;  // 逻辑右移
+        if (value[`WIDTH-1] == 1'b1) begin
+            // 如果符号位为1，需要在高位填充1
+            shifted = shifted | ({shift{1'b1}} << (`WIDTH - shift));
+        end
+        arithmetic_shift_right = shifted;
+    end
+    endfunction
 
     // Assign carry out for ADD and SUB operations
     assign carry =  (control == ADD) ? sum[`WIDTH] :
