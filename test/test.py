@@ -6,10 +6,10 @@ import random
 # AND = 4'b0000
 # OR  = 4'b0001
 # ADD = 4'b0010
-# SLL = 4'b0011  # Shift Left Logical
-# XOR = 4'b0100
-# SRL = 4'b0101  # Shift Right Logical
 # SUB = 4'b0110
+# XOR = 4'b0100
+# SLL = 4'b0011  # Shift Left Logical
+# SRL = 4'b0101  # Shift Right Logical
 # SRA = 4'b0111  # Shift Right Arithmetic
 # SLT = 4'b1000  # Set Less Than Signed
 
@@ -39,13 +39,13 @@ def compute_expected_result(control, a, b):
     elif control == 0b0100:  # XOR
         result = a ^ b
     elif control == 0b0011:  # SLL
-        shift_amount = b & 0x7  # 3 bits for shift amount
+        shift_amount = b & 0x3F  # 6 bits for shift amount
         result = (a << shift_amount) & 0x3F  # Mask to 6 bits
     elif control == 0b0101:  # SRL
-        shift_amount = b & 0x7  # 3 bits for shift amount
+        shift_amount = b & 0x3F  # 6 bits for shift amount
         result = (a >> shift_amount) & 0x3F
     elif control == 0b0111:  # SRA
-        shift_amount = b & 0x7  # 3 bits for shift amount
+        shift_amount = b & 0x3F  # 6 bits for shift amount
         # Sign-extend a to an integer
         a_signed = a if a < 32 else a - 64  # Since 6 bits
         result_signed = a_signed >> shift_amount
@@ -118,10 +118,10 @@ async def test_tt_um_alu(dut):
     AND = 0b0000
     OR  = 0b0001
     ADD = 0b0010
-    SLL = 0b0011
-    XOR = 0b0100
-    SRL = 0b0101
     SUB = 0b0110
+    XOR = 0b0100
+    SLL = 0b0011
+    SRL = 0b0101
     SRA = 0b0111
     SLT = 0b1000
 
