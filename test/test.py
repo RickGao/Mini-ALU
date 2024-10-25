@@ -39,17 +39,33 @@ def compute_expected_result(control, a, b):
     elif control == 0b0100:  # XOR
         result = a ^ b
     elif control == 0b0011:  # SLL
-        shift_amount = b & 0x3F  # 6 bits for shift amount
+        shift_amount = b & 0x07  # 3 bits for shift amount
         result = (a << shift_amount) & 0x3F  # Mask to 6 bits
     elif control == 0b0101:  # SRL
-        shift_amount = b & 0x3F  # 6 bits for shift amount
+        shift_amount = b & 0x07  # 3 bits for shift amount
         result = (a >> shift_amount) & 0x3F
+    # elif control == 0b0111:  # SRA
+    #     shift_amount = b & 0x07  # 3 bits for shift amount
+    #     # Sign-extend a to an integer
+    #     a_signed = a if a < 32 else a - 64  # Since 6 bits
+    #     result_signed = a_signed >> shift_amount
+    #     result = result_signed & 0x3F  # Mask to 6 bits
     elif control == 0b0111:  # SRA
-        shift_amount = b & 0x3F  # 6 bits for shift amount
-        # Sign-extend a to an integer
-        a_signed = a if a < 32 else a - 64  # Since 6 bits
+        shift_amount = b & 0x3F  # 取低6位作为移位量
+        # 对a进行符号扩展
+        if (a & 0x20) == 0:
+            a_signed = a  # 正数
+        else:
+            a_signed = a - 64  # 负数，进行符号扩展
+
+        # 执行算术右移
         result_signed = a_signed >> shift_amount
-        result = result_signed & 0x3F  # Mask to 6 bits
+
+        # 将结果转换回6位二进制表示
+        if result_signed < 0:
+            result = (result_signed + 64) & 0x3F  # 处理负数情况
+        else:
+            result = result_signed & 0x3F  # 处理正数情况
     elif control == 0b1000:  # SLT
         # Signed comparison
         a_signed = a if a < 32 else a - 64
