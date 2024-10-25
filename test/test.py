@@ -244,9 +244,9 @@ async def test_tt_um_alu(dut):
         (0x3F, 0x01),  # Overflow case
         (0x15, 0x02),
     ]
-    for _ in range(10):
+    for _ in range(100):
         a_rand = random.randint(0, 0x3F)
-        b_rand = random.randint(0, 0x07)  # Shift amount up to 6
+        b_rand = random.randint(0, 0x06)  # Shift amount up to 6
         sll_test_cases.append((a_rand, b_rand))
 
     await test_operation(dut, "SLL", SLL, sll_test_cases, delay_ns)
@@ -255,10 +255,12 @@ async def test_tt_um_alu(dut):
     srl_test_cases = [
         (0x20, 0x00),  # Shift by 0
         (0x20, 0x03),  # Shift right by 3
+        (0x20, 0x06),  # Shift right by 3
         (0x01, 0x01),
         (0x3F, 0x02),
+        (0x3F, 0x04),  # Shift right by 4
     ]
-    for _ in range(10):
+    for _ in range(100):
         a_rand = random.randint(0, 0x3F)
         b_rand = random.randint(0, 0x06)
         srl_test_cases.append((a_rand, b_rand))
@@ -271,8 +273,11 @@ async def test_tt_um_alu(dut):
         (0x20, 0x03),  # Shift right arithmetic by 3
         (0x3F, 0x01),  # Negative number
         (0x10, 0x02),
+        (0x3F, 0x04),  # Shift right by4
+        (0x3F, 0x02),  # Shift right by 2
+        # 3
     ]
-    for _ in range(10):
+    for _ in range(100):
         a_rand = random.randint(0, 0x3F)
         b_rand = random.randint(0, 0x06)
         sra_test_cases.append((a_rand, b_rand))
@@ -288,7 +293,7 @@ async def test_tt_um_alu(dut):
         (0x3F, 0x00),
         (0x00, 0x3F),
     ]
-    for _ in range(10):
+    for _ in range(100):
         a_rand = random.randint(0, 0x3F)
         b_rand = random.randint(0, 0x3F)
         slt_test_cases.append((a_rand, b_rand))
