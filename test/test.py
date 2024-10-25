@@ -79,17 +79,34 @@ def compute_expected_result(control, a, b):
     return result, carry, zero
 
 # Helper function to display results for debugging
+def signed_6bit(val):
+    val = val & 0x3F  # 确保只取低6位
+    if val & 0x20:
+        return val - 64  # 处理负数
+    else:
+        return val  # 正数
+
 def display_result(operation, dut, expected_result, expected_carry, expected_zero):
-    a = dut.ui_in.value.integer & 0x3F  # Extract lower 6 bits for a
-    b = dut.uio_in.value.integer & 0x3F  # Extract lower 6 bits for b
-    control = ((dut.ui_in.value.integer >> 6) & 0x3) << 2 | ((dut.uio_in.value.integer >> 6) & 0x3)  # Combine upper bits for control
-    result = dut.uo_out.value.integer & 0x3F  # Extract lower 6 bits for the result
-    carry = (dut.uo_out.value.integer >> 6) & 0x1  # Carry bit is the 7th bit
-    zero = (dut.uo_out.value.integer >> 7) & 0x1  # Zero flag is the 8th bit
+    a_unsigned = dut.ui_in.value.integer & 0x3F  # 提取操作数a的低6位
+    b_unsigned = dut.uio_in.value.integer & 0x3F  # 提取操作数b的低6位
+    control = ((dut.ui_in.value.integer >> 6) & 0x3) << 2 | ((dut.uio_in.value.integer >> 6) & 0x3)  # 组合控制信号
+    result_unsigned = dut.uo_out.value.integer & 0x3F  # 提取结果的低6位
+    carry = (dut.uo_out.value.integer >> 6) & 0x1  # 第7位为进位标志
+    zero = (dut.uo_out.value.integer >> 7) & 0x1  # 第8位为零标志
+
+    # 将无符号数转换为有符号数
+    a_signed = signed_6bit(a_unsigned)
+    b_signed = signed_6bit(b_unsigned)
+    result_signed = signed_6bit(result_unsigned)
+    expected_result_signed = signed_6bit(expected_result)
+
     print(f"Operation: {operation}")
-    print(f"a = {a}, b = {b}, control = {control:04b}")
-    print(f"Expected result = {expected_result}, carry = {expected_carry}, zero = {expected_zero}")
-    print(f"DUT result = {result}, carry = {carry}, zero = {zero}\n")
+    print(f"a = {a_unsigned} ({a_unsigned:06b}), signed: {a_signed}")
+    print(f"b = {b_unsigned} ({b_unsigned:06b}), signed: {b_signed}")
+    print(f"control = {control:04b}")
+    print(f"Expected result = {expected_result} ({expected_result:06b}), signed: {expected_result_signed}, carry = {expected_carry}, zero = {expected_zero}")
+    print(f"DUT result = {result_unsigned} ({result_unsigned:06b}), signed: {result_signed}, carry = {carry}, zero = {zero}\n")
+
 
 # Function to test a specific operation
 async def test_operation(dut, operation_name, control_code, test_cases, delay_ns=50):
