@@ -58,20 +58,18 @@ module tt_um_alu (
         SRA  = 4'b0111,  // Shift Right Arithmatic
         SLT  = 4'b1000;  // Set Less Than Signed
 
+    // Calculate sum and difference
     wire [`WIDTH:0] sum;
     wire [`WIDTH:0] dif;
-
     assign sum = {1'b0, a} + {1'b0, b};
     assign dif = {1'b0, a} - {1'b0, b};
 
     // Calculate bit of shift
     wire [$clog2(`WIDTH)-1:0] shift;
     assign shift = b[$clog2(`WIDTH)-1:0];
-
     // Shift right arithmatic
     wire [`WIDTH-1:0] right_shifted;
     assign right_shifted = a >> shift;
-
     // Calculate high bits
     wire [`WIDTH-1:0] sign_extend;
     assign sign_extend = a[`WIDTH-1] ? (~( {`WIDTH{1'b1}} >> shift )) : {`WIDTH{1'b0}};
