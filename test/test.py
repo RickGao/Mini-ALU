@@ -1,81 +1,259 @@
 import cocotb
 from cocotb.triggers import Timer
+import random
+
+# ALU Control Signal Type
+# AND = 4'b0000
+# OR  = 4'b0001
+# ADD = 4'b0010
+# SLL = 4'b0011  # Shift Left Logical
+# XOR = 4'b0100
+# SRL = 4'b0101  # Shift Right Logical
+# SUB = 4'b0110
+# SRA = 4'b0111  # Shift Right Arithmetic
+# SLT = 4'b1000  # Set Less Than Signed
+
+# Helper function to compute expected result
+def compute_expected_result(control, a, b):
+    # Ensure operands are 6 bits
+    a = a & 0x3F
+    b = b & 0x3F
+
+    # Initialize result, carry, zero
+    result = 0
+    carry = 0
+    zero = 0
+
+    if control == 0b0000:  # AND
+        result = a & b
+    elif control == 0b0001:  # OR
+        result = a | b
+    elif control == 0b0010:  # ADD
+        sum_ = a + b
+        result = sum_ & 0x3F
+        carry = (sum_ >> 6) & 0x1  # 7th bit is carry
+    elif control == 0b0110:  # SUB
+        dif = (a - b) & 0x7F  # 7 bits to capture sign
+        result = dif & 0x3F
+        carry = (dif >> 6) & 0x1  # Carry out
+    elif control == 0b0100:  # XOR
+        result = a ^ b
+    elif control == 0b0011:  # SLL
+        shift_amount = b & 0x7  # 3 bits for shift amount
+        result = (a << shift_amount) & 0x3F  # Mask to 6 bits
+    elif control == 0b0101:  # SRL
+        shift_amount = b & 0x7  # 3 bits for shift amount
+        result = (a >> shift_amount) & 0x3F
+    elif control == 0b0111:  # SRA
+        shift_amount = b & 0x7  # 3 bits for shift amount
+        # Sign-extend a to an integer
+        a_signed = a if a < 32 else a - 64  # Since 6 bits
+        result_signed = a_signed >> shift_amount
+        result = result_signed & 0x3F  # Mask to 6 bits
+    elif control == 0b1000:  # SLT
+        # Signed comparison
+        a_signed = a if a < 32 else a - 64
+        b_signed = b if b < 32 else b - 64
+        result = 1 if a_signed < b_signed else 0
+    else:
+        result = 0
+
+    zero = 1 if result == 0 else 0
+
+    return result, carry, zero
 
 # Helper function to display results for debugging
-def display_result(operation, dut):
-    a = dut.ui_in.value & 0x3F  # Extract lower 6 bits for a
-    b = dut.uio_in.value & 0x3F  # Extract lower 6 bits for b
-    control = ((dut.ui_in.value >> 6) & 0x3) << 2 | ((dut.uio_in.value >> 6) & 0x3)  # Combine upper 2 bits of ui_in and uio_in to form control
-    result = dut.uo_out.value & 0x3F  # Extract lower 6 bits for the result
-    carry = (dut.uo_out.value >> 6) & 0x1  # Carry bit is the 7th bit
-    zero = (dut.uo_out.value >> 7) & 0x1  # Zero flag is the 8th bit
+def display_result(operation, dut, expected_result, expected_carry, expected_zero):
+    a = dut.ui_in.value.integer & 0x3F  # Extract lower 6 bits for a
+    b = dut.uio_in.value.integer & 0x3F  # Extract lower 6 bits for b
+    control = ((dut.ui_in.value.integer >> 6) & 0x3) << 2 | ((dut.uio_in.value.integer >> 6) & 0x3)  # Combine upper bits for control
+    result = dut.uo_out.value.integer & 0x3F  # Extract lower 6 bits for the result
+    carry = (dut.uo_out.value.integer >> 6) & 0x1  # Carry bit is the 7th bit
+    zero = (dut.uo_out.value.integer >> 7) & 0x1  # Zero flag is the 8th bit
     print(f"Operation: {operation}")
-    print(f"a = {a}, b = {b}, control = {control}, result = {result}, carry = {carry}, zero = {zero}\n")
+    print(f"a = {a}, b = {b}, control = {control:04b}")
+    print(f"Expected result = {expected_result}, carry = {expected_carry}, zero = {expected_zero}")
+    print(f"DUT result = {result}, carry = {carry}, zero = {zero}\n")
+
+# Function to test a specific operation
+async def test_operation(dut, operation_name, control_code, test_cases, delay_ns=50):
+    for a_val, b_val in test_cases:
+        # Set the control code
+        control_upper = (control_code >> 2) & 0b11  # upper 2 bits
+        control_lower = control_code & 0b11         # lower 2 bits
+
+        # Set ui_in and uio_in
+        ui_in_value = ((control_upper << 6) | (a_val & 0x3F))
+        uio_in_value = ((control_lower << 6) | (b_val & 0x3F))
+
+        dut.ui_in.value = ui_in_value
+        dut.uio_in.value = uio_in_value
+
+        await Timer(delay_ns, units='ns')
+
+        # Compute expected result
+        expected_result, expected_carry, expected_zero = compute_expected_result(control_code, a_val, b_val)
+
+        # Get outputs from dut
+        uo_out_value = dut.uo_out.value.integer
+        result = uo_out_value & 0x3F
+        carry = (uo_out_value >> 6) & 0x1
+        zero = (uo_out_value >> 7) & 0x1
+
+        # Display results
+        display_result(operation_name, dut, expected_result, expected_carry, expected_zero)
+
+        # Check results
+        assert result == expected_result, f"{operation_name} failed for a={a_val}, b={b_val}. Expected result {expected_result}, got {result}"
+        assert carry == expected_carry, f"{operation_name} carry mismatch for a={a_val}, b={b_val}. Expected carry {expected_carry}, got {carry}"
+        assert zero == expected_zero, f"{operation_name} zero flag mismatch for a={a_val}, b={b_val}. Expected zero {expected_zero}, got {zero}"
 
 @cocotb.test()
 async def test_tt_um_alu(dut):
-    """Test ALU operations: AND, OR, ADD, SUB, XOR"""
-    # AND = 4'b0000,
-    # OR  = 4'b0001,
-    # ADD = 4'b0010,
-    # SUB = 4'b0110,
-    # XOR = 4'b0100,
-    # SLL = 4'b0011,  // Shift Left Logical
-    # SRL = 4'b0110,  // Shift Right Logical
-    # SRA = 4'b0111,  // Shift Right Arithmatic
-    # SLT = 4'b1000;  // Set Less Than Signed
+    """Test ALU operations with corner cases and random values"""
 
-    # Set a small delay
     delay_ns = 50
 
-    # Test AND operation 0000
-    dut.ui_in.value  = 0b00000010  # a = 2, control upper = 00
-    dut.uio_in.value = 0b00000010  # b = 2, control lower = 00
-    await Timer(delay_ns, units='ns')
-    display_result("AND", dut)
-    assert dut.uo_out.value == 0b00000010, f"AND failed, expected 0b00000010, got {dut.uo_out.value}"
+    # Control codes
+    AND = 0b0000
+    OR  = 0b0001
+    ADD = 0b0010
+    SLL = 0b0011
+    XOR = 0b0100
+    SRL = 0b0101
+    SUB = 0b0110
+    SRA = 0b0111
+    SLT = 0b1000
 
-    # Test OR operation 0001
-    dut.ui_in.value  = 0b00001100  # a = 12, control upper = 00
-    dut.uio_in.value = 0b01000010  # b = 2,  control lower = 01
-    await Timer(delay_ns, units='ns')
-    display_result("OR", dut)
-    assert dut.uo_out.value == 0b00001110, f"OR failed, expected 0b00001110, got {dut.uo_out.value}"
+    # Test cases for each operation
 
-    # Test ADD operation 0010 with overflow
-    dut.ui_in.value  = 0b00111111  # a = 63, control upper = 00
-    dut.uio_in.value = 0b10000010  # b = 1,  control lower = 10
-    await Timer(delay_ns, units='ns')
-    display_result("ADD", dut)
-    assert dut.uo_out.value == 0b01000001, f"ADD failed, expected 0b00001000, got {dut.uo_out.value}"
+    # AND operation
+    and_test_cases = [
+        (0, 0),
+        (0x3F, 0x3F),  # max values
+        (0x15, 0x2A),
+        (0x0F, 0x3C),
+    ]
+    # Random test cases
+    for _ in range(10):
+        a_rand = random.randint(0, 0x3F)
+        b_rand = random.randint(0, 0x3F)
+        and_test_cases.append((a_rand, b_rand))
 
-    # Test ADD operation 0010
-    dut.ui_in.value = 0b00000011  # a = 3, control upper = 00
-    dut.uio_in.value = 0b10000101  # b = 5, control lower = 10
-    await Timer(delay_ns, units='ns')
-    display_result("ADD", dut)
-    assert dut.uo_out.value == 0b00001000, f"ADD failed, expected 0b00001000, got {dut.uo_out.value}"
+    await test_operation(dut, "AND", AND, and_test_cases, delay_ns)
 
-    # Test SUB operation 0110
-    dut.ui_in.value  = 0b01000010  # a = 2, control upper = 01
-    dut.uio_in.value = 0b10000001  # b = 1, control lower = 10
-    await Timer(delay_ns, units='ns')
-    display_result("SUB", dut)
-    assert dut.uo_out.value == 0b00000001, f"SUB failed, expected 0b00000001, got {dut.uo_out.value}"
+    # OR operation
+    or_test_cases = [
+        (0, 0),
+        (0x3F, 0x3F),
+        (0x15, 0x2A),
+        (0x0F, 0x30),
+    ]
+    for _ in range(10):
+        a_rand = random.randint(0, 0x3F)
+        b_rand = random.randint(0, 0x3F)
+        or_test_cases.append((a_rand, b_rand))
 
-    # Test SUB operation 0110 with result 0
-    dut.ui_in.value  = 0b01000100  # a = 4, control upper = 01
-    dut.uio_in.value = 0b10000100  # b = 4, control lower = 10
-    await Timer(delay_ns, units='ns')
-    display_result("SUB", dut)
-    assert dut.uo_out.value == 0b10000000, f"SUB failed, expected 0b00000001, got {dut.uo_out.value}"
+    await test_operation(dut, "OR", OR, or_test_cases, delay_ns)
 
-    # Test XOR operation 0100
-    dut.ui_in.value  = 0b01001100  # a = 12, control upper = 01
-    dut.uio_in.value = 0b00000010  # b = 2,  control lower = 00
-    await Timer(delay_ns, units='ns')
-    display_result("XOR", dut)
-    assert dut.uo_out.value == 0b00001110, f"XOR failed, expected 0b00000110, got {dut.uo_out.value}"
+    # ADD operation
+    add_test_cases = [
+        (0, 0),
+        (0x3F, 0x01),  # Overflow case
+        (0x1E, 0x01),
+        (0x0F, 0x0F),
+    ]
+    for _ in range(10):
+        a_rand = random.randint(0, 0x3F)
+        b_rand = random.randint(0, 0x3F)
+        add_test_cases.append((a_rand, b_rand))
 
-    # Check the result for any failure
+    await test_operation(dut, "ADD", ADD, add_test_cases, delay_ns)
+
+    # SUB operation
+    sub_test_cases = [
+        (0, 0),
+        (0x00, 0x01),  # Underflow case
+        (0x3F, 0x3F),
+        (0x10, 0x0F),
+    ]
+    for _ in range(10):
+        a_rand = random.randint(0, 0x3F)
+        b_rand = random.randint(0, 0x3F)
+        sub_test_cases.append((a_rand, b_rand))
+
+    await test_operation(dut, "SUB", SUB, sub_test_cases, delay_ns)
+
+    # XOR operation
+    xor_test_cases = [
+        (0, 0),
+        (0x3F, 0x3F),
+        (0x15, 0x2A),
+        (0x0F, 0x30),
+    ]
+    for _ in range(10):
+        a_rand = random.randint(0, 0x3F)
+        b_rand = random.randint(0, 0x3F)
+        xor_test_cases.append((a_rand, b_rand))
+
+    await test_operation(dut, "XOR", XOR, xor_test_cases, delay_ns)
+
+    # SLL operation
+    sll_test_cases = [
+        (0x01, 0x00),  # Shift by 0
+        (0x01, 0x03),  # Shift left by 3
+        (0x3F, 0x01),  # Overflow case
+        (0x15, 0x02),
+    ]
+    for _ in range(10):
+        a_rand = random.randint(0, 0x3F)
+        b_rand = random.randint(0, 0x07)  # Shift amount up to 7
+        sll_test_cases.append((a_rand, b_rand))
+
+    await test_operation(dut, "SLL", SLL, sll_test_cases, delay_ns)
+
+    # SRL operation
+    srl_test_cases = [
+        (0x20, 0x00),  # Shift by 0
+        (0x20, 0x03),  # Shift right by 3
+        (0x01, 0x01),
+        (0x3F, 0x02),
+    ]
+    for _ in range(10):
+        a_rand = random.randint(0, 0x3F)
+        b_rand = random.randint(0, 0x07)
+        srl_test_cases.append((a_rand, b_rand))
+
+    await test_operation(dut, "SRL", SRL, srl_test_cases, delay_ns)
+
+    # SRA operation
+    sra_test_cases = [
+        (0x20, 0x00),  # Shift by 0
+        (0x20, 0x03),  # Shift right arithmetic by 3
+        (0x3F, 0x01),  # Negative number
+        (0x10, 0x02),
+    ]
+    for _ in range(10):
+        a_rand = random.randint(0, 0x3F)
+        b_rand = random.randint(0, 0x07)
+        sra_test_cases.append((a_rand, b_rand))
+
+    await test_operation(dut, "SRA", SRA, sra_test_cases, delay_ns)
+
+    # SLT operation
+    slt_test_cases = [
+        (0x00, 0x00),
+        (0x1F, 0x1F),
+        (0x1F, 0x20),
+        (0x20, 0x1F),
+        (0x3F, 0x00),
+        (0x00, 0x3F),
+    ]
+    for _ in range(10):
+        a_rand = random.randint(0, 0x3F)
+        b_rand = random.randint(0, 0x3F)
+        slt_test_cases.append((a_rand, b_rand))
+
+    await test_operation(dut, "SLT", SLT, slt_test_cases, delay_ns)
+
     print("All tests passed!")
