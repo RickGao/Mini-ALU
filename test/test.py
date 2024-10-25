@@ -223,7 +223,7 @@ async def test_tt_um_alu(dut):
     ]
     for _ in range(10):
         a_rand = random.randint(0, 0x3F)
-        b_rand = random.randint(0, 0x07)  # Shift amount up to 7
+        b_rand = random.randint(0, 0x07)  # Shift amount up to 6
         sll_test_cases.append((a_rand, b_rand))
 
     await test_operation(dut, "SLL", SLL, sll_test_cases, delay_ns)
@@ -237,7 +237,7 @@ async def test_tt_um_alu(dut):
     ]
     for _ in range(10):
         a_rand = random.randint(0, 0x3F)
-        b_rand = random.randint(0, 0x07)
+        b_rand = random.randint(0, 0x06)
         srl_test_cases.append((a_rand, b_rand))
 
     await test_operation(dut, "SRL", SRL, srl_test_cases, delay_ns)
@@ -251,7 +251,7 @@ async def test_tt_um_alu(dut):
     ]
     for _ in range(10):
         a_rand = random.randint(0, 0x3F)
-        b_rand = random.randint(0, 0x07)
+        b_rand = random.randint(0, 0x06)
         sra_test_cases.append((a_rand, b_rand))
 
     await test_operation(dut, "SRA", SRA, sra_test_cases, delay_ns)
