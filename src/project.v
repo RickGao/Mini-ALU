@@ -72,7 +72,8 @@ module tt_um_alu (
                     (control == XOR) ? (a ^ b) :
                     (control == SLL) ? (a << b[$clog2(`WIDTH)-1:0]) :
                     (control == SRL) ? (a >> b[$clog2(`WIDTH)-1:0]) :
-                    (control == SRA) ? ($signed(a) >>> b[$clog2(`WIDTH)-1:0]):
+                    (control == SRA) ? ( $signed({{(32-`WIDTH){a[`WIDTH-1]}}, a}) >>> b[$clog2(`WIDTH)-1:0] ) [ `WIDTH -1 : 0 ] :
+                    // (control == SRA) ? ($signed(a) >>> b[$clog2(`WIDTH)-1:0]):
                     // (control == SRA) ? (a >>> b[$clog2(`WIDTH)-1:0]) :
                     (control == SLT) ? (($signed(a) < $signed(b)) ? {{(`WIDTH-1){1'b0}}, 1'b1} : {`WIDTH{1'b0}}) :
                     {`WIDTH{1'b0}};  // Default output is 0
