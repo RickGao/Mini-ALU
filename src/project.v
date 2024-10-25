@@ -54,7 +54,7 @@ module tt_um_alu (
         SUB  = 4'b0110,
         XOR  = 4'b0100,
         SLL  = 4'b0011,  // Shift Left Logical
-        SRL  = 4'b0110,  // Shift Right Logical
+        SRL  = 4'b0101,  // Shift Right Logical
         SRA  = 4'b0111,  // Shift Right Arithmatic
         SLT  = 4'b1000;  // Set Less Than Signed
 
