@@ -64,10 +64,13 @@ module tt_um_alu (
     assign sum = {1'b0, a} + {1'b0, b};
     assign dif = {1'b0, a} - {1'b0, b};
 
+    // Calculate bit of shift
+    wire [$clog2(`WIDTH)-1:0] shift;
+    assign shift = b[$clog2(`WIDTH)-1:0];
 
     // Shift right arithmatic
     wire [`WIDTH-1:0] right_shifted;
-    assign right_shifted = a >> b[$clog2(`WIDTH)-1:0];
+    assign right_shifted = a >> shift;
 
     // Calculate high bits
     wire [`WIDTH-1:0] sign_extend;
@@ -80,7 +83,7 @@ module tt_um_alu (
                     (control == SUB) ? dif[`WIDTH-1:0] :
                     (control == XOR) ? (a ^ b) :
                      (control == SLL) ? (a << shift) :
-                    (control == SRL) ? right_shifted :
+                    (control == SRL) ? (a >> shift) :
                     (control == SRA) ? (right_shifted | sign_extend) :
                     // (control == SRA) ? ($signed(a) >>> b[$clog2(`WIDTH)-1:0]): // Not working
                     (control == SLT) ? (($signed(a) < $signed(b)) ? {{(`WIDTH-1){1'b0}}, 1'b1} : {`WIDTH{1'b0}}) :
