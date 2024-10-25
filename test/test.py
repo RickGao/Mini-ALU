@@ -82,7 +82,7 @@ def compute_expected_result(control, a, b):
 def signed_6bit(val):
     val = val & 0x3F  # 确保只取低6位
     if val & 0x20:
-        return val - 64  # 处理负数
+        return val - 64  # 处理负数情况
     else:
         return val  # 正数
 
@@ -100,12 +100,18 @@ def display_result(operation, dut, expected_result, expected_carry, expected_zer
     result_signed = signed_6bit(result_unsigned)
     expected_result_signed = signed_6bit(expected_result)
 
+    # 格式化输出字符串，按照指定的格式
+    a_binary_str = f"{a_unsigned:06b}"
+    b_binary_str = f"{b_unsigned:06b}"
+    result_binary_str = f"{result_unsigned:06b}"
+    expected_result_binary_str = f"{expected_result & 0x3F:06b}"
+
     print(f"Operation: {operation}")
-    print(f"a = {a_unsigned} ({a_unsigned:06b}), signed: {a_signed}")
-    print(f"b = {b_unsigned} ({b_unsigned:06b}), signed: {b_signed}")
+    print(f"a = {a_binary_str} , unsigned: {a_unsigned:<2} , signed: {a_signed}")
+    print(f"b = {b_binary_str} , unsigned: {b_unsigned:<2} , signed: {b_signed}")
     print(f"control = {control:04b}")
-    print(f"Expected result = {expected_result} ({expected_result:06b}), signed: {expected_result_signed}, carry = {expected_carry}, zero = {expected_zero}")
-    print(f"DUT result = {result_unsigned} ({result_unsigned:06b}), signed: {result_signed}, carry = {carry}, zero = {zero}\n")
+    print(f"Expected result = {expected_result_binary_str} , unsigned: {expected_result & 0x3F} , signed: {expected_result_signed}, carry = {expected_carry}, zero = {expected_zero}")
+    print(f"DUT result = {result_binary_str} , unsigned: {result_unsigned} , signed: {result_signed}, carry = {carry}, zero = {zero}\n")
 
 
 # Function to test a specific operation
