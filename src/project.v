@@ -46,6 +46,17 @@ module tt_um_alu (
     assign control[1:0] = uio_in[7:6]; // Upper 2 bits of IO is Control[1:0]
 
 
+
+// module alu (
+//     input  wire [3:0]        control,   // Control Signal
+//     input  wire [`WIDTH-1:0] a,         // Operand A
+//     input  wire [`WIDTH-1:0] b,         // Operand B
+//     output wire [`WIDTH-1:0] out,       // Output
+//     output wire              carry,     // Carry Out
+//     output wire              zero       // Zero Flag
+// );
+
+
     // ALU Control Signal Type
     localparam [3:0] 
         AND  = 4'b0000,
