@@ -72,8 +72,8 @@ module tt_um_alu (
     // Calculate sum and difference
     wire [`WIDTH:0] sum;
     wire [`WIDTH:0] dif;
-    assign sum = {1'b0, a} + {1'b0, b};
-    assign dif = {1'b0, a} - {1'b0, b};
+    assign sum = {{1{a[`WIDTH-1]}}, a} + {{1{b[`WIDTH-1]}}, b};
+    assign dif = {{1{a[`WIDTH-1]}}, a} - {{1{b[`WIDTH-1]}}, b};
 
     // Calculate bit of shift
     wire [$clog2(`WIDTH)-1:0] shift;
