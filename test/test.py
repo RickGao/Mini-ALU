@@ -24,24 +24,35 @@ def compute_expected_result(control, a, b):
     carry = 0
     zero = 0
 
-    if control == 0b0000:  # AND
+
+    AND = 0b0000
+    OR  = 0b0001
+    ADD = 0b0010
+    SUB = 0b0011
+    XOR = 0b1001
+    SLL = 0b0100
+    SRL = 0b0101
+    SRA = 0b0110
+    SLT = 0b0111
+
+    if control == AND:  # AND
         result = a & b
-    elif control == 0b0001:  # OR
+    elif control == OR:  # OR
         result = a | b
-    elif control == 0b0010:  # ADD
+    elif control == ADD:  # ADD
         sum_ = a + b
         result = sum_ & 0x3F
         carry = (sum_ >> 6) & 0x1  # 7th bit is carry
-    elif control == 0b0110:  # SUB
+    elif control == SUB:  # SUB
         dif = (a - b) & 0x7F  # 7 bits to capture sign
         result = dif & 0x3F
         carry = (dif >> 6) & 0x1  # Carry out
-    elif control == 0b0100:  # XOR
+    elif control == XOR:  # XOR
         result = a ^ b
-    elif control == 0b0011:  # SLL
+    elif control == SLL:  # SLL
         shift_amount = b & 0x07  # 3 bits for shift amount
         result = (a << shift_amount) & 0x3F  # Mask to 6 bits
-    elif control == 0b0101:  # SRL
+    elif control == SRL:  # SRL
         shift_amount = b & 0x07  # 3 bits for shift amount
         result = (a >> shift_amount) & 0x3F
     # elif control == 0b0111:  # SRA
@@ -50,7 +61,7 @@ def compute_expected_result(control, a, b):
     #     a_signed = a if a < 32 else a - 64  # Since 6 bits
     #     result_signed = a_signed >> shift_amount
     #     result = result_signed & 0x3F  # Mask to 6 bits
-    elif control == 0b0111:  # SRA
+    elif control == SRA:  # SRA
         shift_amount = b & 0x3F  # 取低6位作为移位量
         # 对a进行符号扩展
         if (a & 0x20) == 0:
@@ -66,7 +77,7 @@ def compute_expected_result(control, a, b):
             result = (result_signed + 64) & 0x3F  # 处理负数情况
         else:
             result = result_signed & 0x3F  # 处理正数情况
-    elif control == 0b1000:  # SLT
+    elif control == SLT:  # SLT
         # Signed comparison
         a_signed = a if a < 32 else a - 64
         b_signed = b if b < 32 else b - 64
