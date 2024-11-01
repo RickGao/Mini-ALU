@@ -157,12 +157,12 @@ async def test_tt_um_alu(dut):
     AND = 0b0000
     OR  = 0b0001
     ADD = 0b0010
-    SUB = 0b0110
-    XOR = 0b0100
-    SLL = 0b0011
+    SUB = 0b0011
+    XOR = 0b1001
+    SLL = 0b0100
     SRL = 0b0101
-    SRA = 0b0111
-    SLT = 0b1000
+    SRA = 0b0110
+    SLT = 0b0111
 
     # Test cases for each operation
 
