@@ -3,15 +3,17 @@ from cocotb.triggers import Timer
 import random
 
 # ALU Control Signal Type
-# AND = 4'b0000
-# OR  = 4'b0001
-# ADD = 4'b0010
-# SUB = 4'b0110
-# XOR = 4'b0100
-# SLL = 4'b0011  # Shift Left Logical
-# SRL = 4'b0101  # Shift Right Logical
-# SRA = 4'b0111  # Shift Right Arithmetic
-# SLT = 4'b1000  # Set Less Than Signed
+
+AND = 0b0000
+OR  = 0b0001
+ADD = 0b0010
+SUB = 0b0011
+XOR = 0b1001
+SLL = 0b0100  # Shift Left Logical
+SRL = 0b0101  # Shift Right Logical
+SRA = 0b0110  # Shift Right Arithmetic
+SLT = 0b0111  # Set Less Than Signed
+
 
 # Helper function to compute expected result
 def compute_expected_result(control, a, b):
@@ -24,16 +26,6 @@ def compute_expected_result(control, a, b):
     carry = 0
     zero = 0
 
-
-    AND = 0b0000
-    OR  = 0b0001
-    ADD = 0b0010
-    SUB = 0b0011
-    XOR = 0b1001
-    SLL = 0b0100
-    SRL = 0b0101
-    SRA = 0b0110
-    SLT = 0b0111
 
     if control == AND:  # AND
         result = a & b
@@ -163,17 +155,6 @@ async def test_tt_um_alu(dut):
     """Test ALU operations with corner cases and random values"""
 
     delay_ns = 50
-
-    # Control codes
-    AND = 0b0000
-    OR  = 0b0001
-    ADD = 0b0010
-    SUB = 0b0011
-    XOR = 0b1001
-    SLL = 0b0100
-    SRL = 0b0101
-    SRA = 0b0110
-    SLT = 0b0111
 
     # Test cases for each operation
 
