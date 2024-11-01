@@ -147,7 +147,7 @@ async def test_operation(dut, operation_name, control_code, test_cases, delay_ns
 
         # Check results
         assert result == expected_result, f"{operation_name} failed for a={a_val}, b={b_val}. Expected result {expected_result}, got {result}"
-        # assert carry == expected_carry, f"{operation_name} carry mismatch for a={a_val}, b={b_val}. Expected carry {expected_carry}, got {carry}"
+        assert carry == expected_carry, f"{operation_name} carry mismatch for a={a_val}, b={b_val}. Expected carry {expected_carry}, got {carry}"
         assert zero == expected_zero, f"{operation_name} zero flag mismatch for a={a_val}, b={b_val}. Expected zero {expected_zero}, got {zero}"
 
 @cocotb.test()
